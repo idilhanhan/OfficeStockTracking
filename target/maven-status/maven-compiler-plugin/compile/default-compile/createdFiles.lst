@@ -1,0 +1,7 @@
+service/StockService.class
+service/RedisManager.class
+model/OfficeStock.class
+service/JaxRsActivator.class
+service/AdminService.class
+model/User.class
+service/UserService.class
