@@ -46,7 +46,7 @@ public class StockService { //admin-user token da tutunucak
     
     
     Random random = new Random();
-    RedisManager rm = new RedisManager(); 
+    RedisManager rm = new RedisManager();
     
     
     @POST
@@ -76,6 +76,25 @@ public class StockService { //admin-user token da tutunucak
     }
     
     
+    @GET
+    @Path("/stock/barcode")
+    @ApiOperation("Reads the stock number from the given barcode")
+    public Response getBarcodeValue(@QueryParam("token") String token,
+            @QueryParam("barcodeBase64") String barcodeBase64){ //name could be changed
+        if (rm.checkToken(token) == null){
+            return Response.status(Response.Status.FORBIDDEN).build();
+        }
+        
+        String barcode = readBarcode(barcodeBase64);
+        if ( barcode != null){
+            return Response.ok(barcode).build();
+        }
+        else{
+            return Response.ok().build(); //HERE THE BARCODE CAN NOT BE READ -- HANDLE THIS IN JS
+        }
+    }
+    
+    
     /**
      *
      * @param barcodeBase64
@@ -101,8 +120,8 @@ public class StockService { //admin-user token da tutunucak
     @Path("/stock") //question about the path can multiple services have the same path???
     @ApiOperation(value="Deletes a stock")
     public Response deleteStock(@QueryParam("token")String token,
-                                @QueryParam("stockNo") String stockNo,
-                                @QueryParam("ownerName") String ownerName){
+            @QueryParam("stockNo") String stockNo,
+            @QueryParam("ownerName") String ownerName){
         if (rm.checkToken(token) == null){ //If no token return
             
             return Response.status(Response.Status.FORBIDDEN).build();
@@ -130,16 +149,19 @@ public class StockService { //admin-user token da tutunucak
         String owner = rm.getOwnerOf(stockNo);
         result.put("stock", stock);
         result.put("owner", owner);
-        return Response.ok(result).build(); 
+        return Response.ok(result).build();
     }
     
-
+    
+    //YOU MIGHT HAVE TO CHANGE THE READ BARCODE PART OF THIS
+    
     @POST
     @Path("/stock/owner") //??
     @Produces(MediaType.APPLICATION_JSON)
     @ApiOperation(value="Creates an ownership between a stock and an employee")
     public Response assignStock(@FormParam("token")String token,
             @FormParam("barcodeBase64") String barcodeBase64,
+            @FormParam("barcode") String stockNo,
             @FormParam("employee") String employee){
         
         if (rm.checkToken(token) == null){ //If no token return
@@ -148,7 +170,7 @@ public class StockService { //admin-user token da tutunucak
         }
         
         
-        String stockNo = readBarcode(barcodeBase64);
+        //String stockNo = readBarcode(barcodeBase64);
         
         
         if (rm.getStock(stockNo) == null){ //if barcode is read for the first time => create new stock
@@ -166,7 +188,7 @@ public class StockService { //admin-user token da tutunucak
         }
         
         
-
+        
     }
     
     
@@ -184,12 +206,12 @@ public class StockService { //admin-user token da tutunucak
         Map result = rm.getStocks(prompt);
         
         if (result.isEmpty()){
-            return Response.ok().build(); 
+            return Response.ok().build();
         }
         else{
-        return Response.ok().entity(result).build();
+            return Response.ok().entity(result).build();
         }//"stocks" -- for json stock objects
-                                            //"owners" -- for stockNo:owner
+        //"owners" -- for stockNo:owner
         
     }
     
@@ -199,9 +221,9 @@ public class StockService { //admin-user token da tutunucak
     @Produces(MediaType.TEXT_PLAIN)
     @ApiOperation(value="Updates the existing information about a stock")
     public Response updateStock(@FormParam("token") String token,
-                                @FormParam("stockNo") String stockNo,
-                                @FormParam("description") String description,
-                                @FormParam("capacity") String capacity){
+            @FormParam("stockNo") String stockNo,
+            @FormParam("description") String description,
+            @FormParam("capacity") String capacity){
         
         if (rm.checkToken(token) == null){
             return Response.ok().build();
