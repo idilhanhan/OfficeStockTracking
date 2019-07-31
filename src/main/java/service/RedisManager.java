@@ -520,8 +520,12 @@ public class RedisManager {
             String[] parts = owner.split("\\.");
             String [] tmp2 = parts[0].split(":");
             
+            try {
+                return new String((key.get(0).split("\\.")[0].split(":")[1]).getBytes(), "UTF-8");
+            } catch (UnsupportedEncodingException ex) {
+                Logger.getLogger(RedisManager.class.getName()).log(Level.SEVERE, null, ex);
+            }
             return key.get(0).split("\\.")[0].split(":")[1];
-            
             
         }
         return "";
@@ -539,11 +543,11 @@ public class RedisManager {
         RedisStringCommands sync = connection.sync();
         
         // decode the employee name                      
-        String employee = ownerName;
+        String employee = null;
         try {
-             employee = URLDecoder.decode(ownerName, "UTF-8");
-        } catch (UnsupportedEncodingException e) {
-            Logger.getLogger(RedisManager.class.getName()).log(Level.SEVERE, null, e);
+            employee = new String(new String(ownerName.getBytes("UTF-8")).getBytes("ISO8859-1"),"UTF-8");
+        } catch (UnsupportedEncodingException ex) {
+            Logger.getLogger(RedisManager.class.getName()).log(Level.SEVERE, null, ex);
         }
 
         String keyToAdd = "owner:" + employee + ".stock:" + stockNo;         
