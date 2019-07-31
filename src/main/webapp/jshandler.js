@@ -74,13 +74,14 @@ function printEmployee(){
     xhttp.send();
 }
             
-function assignStock(){
+function assignStock(){ //update this to get the value from the input file!!
     event.preventDefault();
     var xhttp = new XMLHttpRequest();
     var employeeNo = document.getElementById("selectEmployee").value;
     var barcode = document.getElementById("assign_barcode").files[0]; 
+    var stockNo = document.getElementById("editBarcode").value;
     var reader = new FileReader();      
-    // var data = new FormData();
+    //var data = new FormData();
     //data.append("employeeNo", encodeURIComponent(employeeNo));
                 
     xhttp.onreadystatechange = function() {
@@ -88,23 +89,28 @@ function assignStock(){
             // Typical action to be performed when the document is ready:
             //window.location.href = "/officeStock/api/user/home";
             if (xhttp.responseText != ""){
-                            window.location.href = "officeStock.html";
+                window.location.href = "officeStock.html";
             }
             else{
                 getAlert("danger", "Stock cannot be assigned!");
-            }
-
-                       
+            }            
         }
     };
+    
+    if (barcode === undefined){ //if here than the file was not uploaded
+        xhttp.open("POST", "/officeStock/api/stock/owner");
+        xhttp.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+        //document.getElementById("test").innerHTML = encodeURI(event.target.result.split(",")[1]);
+        xhttp.send("token=" + encodeURIComponent(window.localStorage.getItem("token")) + "&barcodeBase64=" + null  +"&barcode=" + encodeURIComponent(stockNo) + "&employee=" + encodeURIComponent(employeeNo)); 
+    }
 
-    reader.addEventListener("load", function(){
+    reader.addEventListener("load", function(){ //if file does not exist this function is not called
         var barcodeBase64 = event.target.result.split(",")[1];
         //data.append("barcodeBase64", encodeURIComponent(barcodeBase64));
         xhttp.open("POST", "/officeStock/api/stock/owner");
         xhttp.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
         //document.getElementById("test").innerHTML = encodeURI(event.target.result.split(",")[1]);
-        xhttp.send("token=" + encodeURIComponent(window.localStorage.getItem("token")) + "&barcodeBase64=" + encodeURIComponent(barcodeBase64) + "&employee=" + encodeURIComponent(employeeNo)); 
+        xhttp.send("token=" + encodeURIComponent(window.localStorage.getItem("token")) + "&barcodeBase64=" + encodeURIComponent(barcodeBase64)  +"&barcode=" + encodeURIComponent(stockNo) + "&employee=" + encodeURIComponent(employeeNo)); 
         //xhttp.send(data);
     }, false);
                 
@@ -431,5 +437,42 @@ function closeUpdate(){
 }
 
 function closeAlert(){
-    document.getElementById("alertDiv").style.visibility = "hidden"
+    document.getElementById("alertDiv").style.visibility = "hidden";
+}
+
+function readBarcode(){
+    event.preventDefault();
+    var xhttp = new XMLHttpRequest();
+    var barcode = document.getElementById("assign_barcode").files[0]; 
+    var reader = new FileReader();    
+                
+    xhttp.onreadystatechange = function() {
+        if (this.readyState == 4 && this.status >= 200 && this.status < 400) {
+            // Typical action to be performed when the document is ready:
+            //window.location.href = "/officeStock/api/user/home";
+            if (xhttp.responseText != ""){
+                //in here print the read value to the input place
+                var barcodeValue = xhttp.responseText;
+                document.getElementById("editBarcode").value = barcodeValue;
+            }  
+            else{
+                getAlert("danger", "Barcode can not be read!");
+            }
+        }
+    };
+
+    reader.addEventListener("load", function(){
+        var barcodeBase64 = event.target.result.split(",")[1];
+        //data.append("barcodeBase64", encodeURIComponent(barcodeBase64));
+        xhttp.open("GET", "/officeStock/api/stock/barcode" + "?token=" + encodeURIComponent(window.localStorage.getItem("token")) + "&barcodeBase64=" + encodeURIComponent(barcodeBase64));
+        xhttp.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+        //document.getElementById("test").innerHTML = encodeURI(event.target.result.split(",")[1]);
+        xhttp.send(); 
+        //xhttp.send(data);
+    }, false);
+                
+                               
+    if (barcode){
+        reader.readAsDataURL(barcode);
+    }
 }
